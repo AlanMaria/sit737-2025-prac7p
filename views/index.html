@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Library Management</title>
+  <!-- Add Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../public/style.css">
+</head>
+<body>
+  <div class="container mt-4">
+    <h1 class="text-center mb-4">Library Management</h1>
+
+    <!-- Form to add a new book -->
+    <form action="/add-book" method="POST" id="addBookForm" class="mb-4">
+      <div class="input-group">
+        <input type="text" name="name" class="form-control" placeholder="Enter book name" required>
+        <button type="submit" class="btn btn-primary">Add Book</button>
+      </div>
+    </form>
+
+    <h2 class="mb-3">Books in Library</h2>
+    <ul id="bookList" class="list-group">
+      <!-- List of books will be rendered here dynamically -->
+    </ul>
+  </div>
+
+  <!-- Edit Book Modal -->
+  <div id="editModal" class="modal" tabindex="-1" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Book</h5>
+          <button type="button" class="btn-close" onclick="closeEditModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editForm">
+            <div class="mb-3">
+              <label for="editBookName" class="form-label">Book Name</label>
+              <input type="text" id="editBookName" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-success">Update Book</button>
+            <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Bootstrap JS and Popper for the modal functionality -->
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+  
+  <script>
+    // Fetch and display the list of books from the server
+    async function fetchBooks() {
+      const response = await fetch('/todos');
+      const books = await response.json();
+      const bookList = document.getElementById('bookList');
+      bookList.innerHTML = ''; // Clear any existing content
+      
+      books.forEach(book => {
+        const li = document.createElement('li');
+        li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center');
+        li.innerHTML = `
+          <span class="book-name">${book.name}</span>
+          <div>
+            <button onclick="editBook('${book._id}', '${book.name}')" class="btn btn-warning btn-sm me-2">Edit</button>
+            <form action="/return-book/${book._id}" method="POST" style="display:inline;">
+              <button type="submit" class="btn btn-danger btn-sm">Return Book</button>
+            </form>
+          </div>
+        `;
+        bookList.appendChild(li);
+      });
+    }
+
+    // Call the fetchBooks function to render the book list on page load
+    window.onload = fetchBooks;
+
+    // Handle the form submission to add a book
+    document.getElementById('addBookForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const formData = new FormData(event.target);
+      const bookName = formData.get('name');
+      
+      // Send the new book data to the server
+      await fetch('/add-book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: bookName }),
+      });
+
+      // Refresh the book list after adding a new book
+      fetchBooks();
+    });
+
+    // Show the Edit Book Modal and fill the form with the current book name
+    function editBook(bookId, bookName) {
+      document.getElementById('editBookName').value = bookName;
+      document.getElementById('editModal').style.display = 'block';
+
+      // Store the bookId for later use when updating the book
+      document.getElementById('editForm').onsubmit = async (event) => {
+        event.preventDefault();
+        const updatedName = document.getElementById('editBookName').value;
+
+        // Send the updated book name to the server
+        await fetch(`/edit-book/${bookId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: updatedName }),
+        });
+
+        // Hide the modal and refresh the book list
+        closeEditModal();
+        fetchBooks();
+      };
+    }
+
+    // Close the Edit Book Modal
+    function closeEditModal() {
+      document.getElementById('editModal').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
