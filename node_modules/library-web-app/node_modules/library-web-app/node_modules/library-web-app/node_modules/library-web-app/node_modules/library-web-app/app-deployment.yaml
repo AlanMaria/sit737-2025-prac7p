@@ -34,7 +34,7 @@ spec:
                   key: mongo-uri
 ---
 apiVersion: v1
-kind: Servicecl
+kind: Service
 metadata:
   name: nodejs-service
 spec:
