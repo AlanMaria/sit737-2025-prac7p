@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: nodejs-app
-          image: jjm06/crud-app:latest
+          image: alanmaria2001/crud-app:latest
           ports:
             - containerPort: 3000
           env:
@@ -34,7 +34,7 @@ spec:
                   key: mongo-uri
 ---
 apiVersion: v1
-kind: Service
+kind: Servicecl
 metadata:
   name: nodejs-service
 spec:
